@@ -119,7 +119,7 @@ contract BlogChallenge {
     uint256 successfulSubmissions = 0;
     // 遍历所有周期
     for (uint256 i = 1; i <= currentChallenge.numberOfCycles; i++)
-      // 如果该周期提交了博客，成功次数加一
+    // 如果该周期提交了博客，成功次数加一
       if (isCycleSucceed(i)) successfulSubmissions++;
 
     // 如果成功次数达到总周期数的60%，则挑战成功
@@ -127,12 +127,13 @@ contract BlogChallenge {
   }
 
   // 获取要授权的代币数量
-  function approveAmount() public onlyStarted view returns (bool) {
+  function approveAmount() public onlyStarted view returns (uint256) {
     return currentChallenge.penaltyAmount * (DEPOSIT_MULTIPLIER + currentChallenge.numberOfCycles);
   }
 
   // 挑战者是否授权
   function isChallengerApproved() public onlyStarted view returns (bool) {
+    IERC20 token = currentChallenge.penaltyToken;
     uint256 approve = token.allowance(currentChallenge.challenger, address(this));
     return approve >= approveAmount();
   }
@@ -152,33 +153,33 @@ contract BlogChallenge {
     uint256 _penaltyAmount
   ) public onlyEnded {
 
-    string[][] blogSubmissions = new string[][](_numberOfCycles);
+    string[][] memory blogSubmissions = new string[][](_numberOfCycles);
     for (uint256 i = 0; i < _numberOfCycles; i++)
       blogSubmissions[i] = new string[](0);
 
     // 初始化当前挑战
     currentChallenge = Challenge({
-      // 时间设置
-      startTime: _startTime,
-      cycle: _cycle,
-      numberOfCycles: _numberOfCycles,
+    // 时间设置
+    startTime: _startTime,
+    cycle: _cycle,
+    numberOfCycles: _numberOfCycles,
 
-      // 人员设置
-      challenger: _challenger,
-      participants: _participants,
+    // 人员设置
+    challenger: _challenger,
+    participants: _participants,
 
-      // 惩罚设置
-      penaltyToken: _penaltyToken,
-      penaltyAmount: _penaltyAmount,
+    // 惩罚设置
+    penaltyToken: _penaltyToken,
+    penaltyAmount: _penaltyAmount,
 
-      // 挑战者状态
-      deposit: 0,
-      blogSubmissions: blogSubmissions,
-      noBalanceCount: 0,
+    // 挑战者状态
+    deposit: 0,
+    blogSubmissions: blogSubmissions,
+    noBalanceCount: 0,
 
-      // 挑战状态
-      lastUpdatedCycle: 0,
-      started: true
+    // 挑战状态
+    lastUpdatedCycle: 0,
+    started: true
     });
   }
 
@@ -193,7 +194,7 @@ contract BlogChallenge {
     require(isToBeUpdatedCycle(cycle), "All cycles are updated!");
 
     do {
-      uint256 blogs = currentChallenge.blogSubmissions[cycle - 1];
+      string[] memory blogs = currentChallenge.blogSubmissions[cycle - 1];
 
       // 如果挑战者没有提交博客，则发放惩罚金
       if (blogs.length <= 0) onCycleFailed();
@@ -225,7 +226,7 @@ contract BlogChallenge {
   }
 
   // 提交博客
-  function submitBlog(string blogUrl) public onlyChallenger onlyStarted {
+  function submitBlog(string memory blogUrl) public onlyChallenger onlyStarted {
     // 记录博客提交情况
     currentChallenge.blogSubmissions[currentCycleIdx()].push(blogUrl);
   }
@@ -258,7 +259,7 @@ contract BlogChallenge {
 
   // 给参与者发放奖励
   function releaseToParticipants(address payer, uint256 totalAmount) private {
-    ERC20 token = currentChallenge.penaltyToken;
+    IERC20 token = currentChallenge.penaltyToken;
     uint256 length = currentChallenge.participants.length;
     uint256 amount = totalAmount / length;
 
@@ -276,7 +277,7 @@ contract BlogChallenge {
   }
   // 周期失败回调
   function onCycleFailed() private {
-    ERC20 token = currentChallenge.penaltyToken;
+    IERC20 token = currentChallenge.penaltyToken;
     uint256 balance = token.balanceOf(currentChallenge.challenger);
     uint256 amount = currentChallenge.penaltyAmount;
 

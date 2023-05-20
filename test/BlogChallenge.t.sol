@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "forge-std/Test.sol";
-import "..\src\BlogChallenge.sol";
+import "src/BlogChallenge.sol";
 
 contract BaseERC20 is ERC20 {
   constructor() ERC20("Base", "Base") {}
@@ -23,32 +23,42 @@ contract BlogChallengeTest is Test {
   }
 
   function testChallenge() {
+    uint256 startTime = 100;
+    uint256 cycleDuration = 100;
     uint256 cycleCnt = 12;
-    uint256 tokenAmount = 100;
+    uint256 penaltyAmount = 100;
+    uint256 fund = 1000000;
+
     address[] memory participants;
 
     participants.push(address(0x1111));
     participants.push(address(0x2222));
     participants.push(address(0x3333));
 
-    token.mint(msg.sender, 1000000);
+    token.mint(msg.sender, fund);
 
     vm.wrap(0);
     blogChallenge.setChallenge(
-      100, 100, cycleCnt,
+      startTime, cycleDuration, cycleCnt,
       msg.sender, participants,
-      token, tokenAmount
+      token, penaltyAmount
     );
     uint256 approveAmount = blogChallenge.approveAmount();
+    assertEq(approveAmount, (3 + cycleCnt) * penaltyAmount);
 
     token.approve(approveAmount, blogChallenge);
     blogChallenge.depositPenalty();
 
-    for (uint256 i = 0; i < cycleCnt; i++) {
+    assertEq(token.balanceOf(msg.sender), fund - approveAmount);
 
+    for (uint256 i = 0; i <= cycleCnt; i++) {
+      vm.wrap(startTime + cycleDuration * i + cycleDuration / 2);
+      if (i < cycleCnt) blogChallenge.submitBlog("aaa");
+      if (i > 0) blogChallenge.updateCycle();
     }
 
-    vm.wrap(150);
+    blogChallenge.withdrawDeposit();
 
+    assertEq(token.balanceOf(msg.sender), fund);
   }
 }
