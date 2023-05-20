@@ -5,5 +5,7 @@
     <mapping directory="$PROJECT_DIR$/blog-challenge" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/blog-challenge/lib/forge-std" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/blog-challenge/lib/forge-std/lib/ds-test" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/openzeppelin-contracts" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/openzeppelin-contracts/lib/forge-std" vcs="Git" />
   </component>
 </project>

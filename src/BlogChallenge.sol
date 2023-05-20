@@ -12,6 +12,7 @@ contract BlogChallenge {
 
     address challenger; // 挑战者地址
     address[] participants; // 参与者地址
+    uint256 maxParticipants; // 最大参与者数量
 
     IERC20 penaltyToken; // 惩罚币种
     uint256 penaltyAmount; // 惩罚金额
@@ -29,6 +30,21 @@ contract BlogChallenge {
 
   uint256 public constant DEPOSIT_MULTIPLIER = 3; // 押金倍数
   uint256 public constant SUCCEED_RATE = 60; // 挑战成功所需的比率
+
+  // region events
+
+  event ChallengeStart(address indexed challenger);
+  event ChallengeEnd(address indexed challenger, bool indexed passed);
+
+  event SubmitBlog(address indexed challenger, uint256 indexed cycle, string blogUrl);
+  event CycleEnd(address indexed challenger, uint256 indexed cycle, bool indexed passed);
+
+  event Participate(address indexed challenger, address indexed participant);
+  event Exit(address indexed challenger, address indexed participant);
+
+  event Release(address indexed challenger, uint256 indexed cycle, uint256 amount);
+
+  // endregion
 
   // region modifier
 
@@ -80,6 +96,16 @@ contract BlogChallenge {
 
   // region View calls
 
+  function challenger() public view returns (address) {
+    return currentChallenge.challenger;
+  }
+  function participants() public view returns (address[] memory) {
+    return currentChallenge.participants;
+  }
+  function currentDeposit() public view returns (uint256) {
+    return currentChallenge.deposit;
+  }
+
   // 当前周期数（0表示没有开始，从1开始，最大值为currentChallenge.numberOfCycles + 1）
   function currentCycle() public onlyStarted view returns (uint256) {
     if (block.timestamp < currentChallenge.startTime) return 0;
@@ -130,6 +156,10 @@ contract BlogChallenge {
   function approveAmount() public onlyStarted view returns (uint256) {
     return currentChallenge.penaltyAmount * (DEPOSIT_MULTIPLIER + currentChallenge.numberOfCycles);
   }
+  // 获取押金的代币数量
+  function depositAmount() public onlyStarted view returns (uint256) {
+    return currentChallenge.penaltyAmount * DEPOSIT_MULTIPLIER;
+  }
 
   // 挑战者是否授权
   function isChallengerApproved() public onlyStarted view returns (bool) {
@@ -149,6 +179,7 @@ contract BlogChallenge {
     uint256 _numberOfCycles,
     address _challenger,
     address[] memory _participants,
+    uint256 _maxParticipants,
     IERC20 _penaltyToken,
     uint256 _penaltyAmount
   ) public onlyEnded {
@@ -167,6 +198,7 @@ contract BlogChallenge {
     // 人员设置
     challenger: _challenger,
     participants: _participants,
+    maxParticipants: _maxParticipants,
 
     // 惩罚设置
     penaltyToken: _penaltyToken,
@@ -181,11 +213,20 @@ contract BlogChallenge {
     lastUpdatedCycle: 0,
     started: true
     });
+
+    for (uint256 i = 0; i < _participants.length; i++)
+      emit Participate(_challenger, _participants[i]);
+
+    emit ChallengeStart(_challenger);
   }
 
   // 中途加入
   function participate() public onlyNotParticipant onlyStarted {
+    require(currentChallenge.participants.length <
+      currentChallenge.maxParticipants, "Participants over limit!");
+
     currentChallenge.participants.push(msg.sender);
+    emit Participate(currentChallenge.challenger, msg.sender);
   }
 
   // 更新周期（任何人都能调用）
@@ -200,6 +241,8 @@ contract BlogChallenge {
       if (blogs.length <= 0) onCycleFailed();
       // 否则视为通过
       else onCyclePass();
+
+      emit CycleEnd(currentChallenge.challenger, cycle, blogs.length > 0);
 
       cycle++;
     } while (currentChallenge.started && isToBeUpdatedCycle(cycle));
@@ -217,7 +260,7 @@ contract BlogChallenge {
 
   // 存入押金
   function depositPenalty() public onlyChallenger onlyStarted {
-    uint256 deposit = currentChallenge.penaltyAmount * DEPOSIT_MULTIPLIER;
+    uint256 deposit = depositAmount();
 
     require(currentChallenge.deposit < deposit, "Have been deposited!");
 
@@ -229,12 +272,7 @@ contract BlogChallenge {
   function submitBlog(string memory blogUrl) public onlyChallenger onlyStarted {
     // 记录博客提交情况
     currentChallenge.blogSubmissions[currentCycleIdx()].push(blogUrl);
-  }
-
-  // 提取押金
-  function withdrawDeposit() public onlyChallenger onlyStarted {
-    // 将剩余押金转给挑战者
-    currentChallenge.penaltyToken.transfer(msg.sender, currentChallenge.deposit);
+    emit SubmitBlog(currentChallenge.challenger, currentCycle(), blogUrl);
   }
 
   // endregion
@@ -248,6 +286,8 @@ contract BlogChallenge {
       if (msg.sender == currentChallenge.participants[i]) {
         currentChallenge.participants[i] = currentChallenge.participants[len - 1];
         currentChallenge.participants.pop();
+        emit Exit(currentChallenge.challenger, msg.sender);
+
         break;
       }
     }
@@ -270,6 +310,8 @@ contract BlogChallenge {
       else // 否则通过授权转账
         token.transferFrom(payer, participant, amount);
     }
+
+    emit Release(currentChallenge.challenger, currentCycle(), amount);
   }
 
   // 周期成功回调
@@ -313,8 +355,19 @@ contract BlogChallenge {
     // 挑战失败
     else onChallengeFailed();
 
+    emit ChallengeEnd(currentChallenge.challenger, success);
+
+    withdrawDeposit();
     // 标记挑战为已结束
     currentChallenge.started = false;
+  }
+  // 提取押金
+  function withdrawDeposit() private {
+    if (currentChallenge.deposit <= 0) return;
+    // 将剩余押金转给挑战者
+    currentChallenge.penaltyToken.transfer(
+      currentChallenge.challenger, currentChallenge.deposit);
+    currentChallenge.deposit = 0;
   }
   // 挑战成功回调
   function onChallengePass() private {
