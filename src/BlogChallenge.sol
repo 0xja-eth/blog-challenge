@@ -116,7 +116,8 @@ contract BlogChallenge {
     return res;
   }
   function currentCycleIdx() public view returns (uint256) {
-    return currentCycle() - 1;
+    uint256 cycle = currentCycle();
+    return cycle <= 0 ? 0 : cycle - 1;
   }
 
   // 是否最后一个周期
@@ -165,7 +166,12 @@ contract BlogChallenge {
   function isChallengerApproved() public onlyStarted view returns (bool) {
     IERC20 token = currentChallenge.penaltyToken;
     uint256 approve = token.allowance(currentChallenge.challenger, address(this));
-    return approve >= approveAmount();
+
+    if (currentChallenge.deposit <= 0) // 未交押金
+      return approve >= approveAmount();
+
+    uint256 restCycle = currentChallenge.numberOfCycles - currentCycleIdx();
+    return approve >= currentChallenge.penaltyAmount * restCycle;
   }
 
   // endregion
@@ -280,7 +286,7 @@ contract BlogChallenge {
   // region Participant calls
 
   // 中途退出
-  function exit() public onlyEnded {
+  function exit() public onlyStarted {
     uint256 len = currentChallenge.participants.length;
     for (uint256 i = 0; i < len; i++) {
       if (msg.sender == currentChallenge.participants[i]) {
