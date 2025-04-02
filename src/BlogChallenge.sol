@@ -335,8 +335,6 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     uint256 cost = participateWithAmountCost(tokenAmount); // (tokenAmount * penaltyAmount * 100) / (TOKEN_PRICE_MULTIPLIER * INITIAL_SUPPLY);
     require(cost > 0, "Cost too small");
 
-    uint256 userBalance = balanceOf(msg.sender);
-
     // 转移惩罚代币
     require(
       penaltyToken.transferFrom(msg.sender, address(this), cost),

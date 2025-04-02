@@ -61,13 +61,14 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.24",
+        version: "0.8.20",
         settings: {
           // evmVersion: "shanghai",
           optimizer: {
             enabled: true,
-            runs: 100
-          }
+            runs: 800
+          },
+          viaIR: true
         }
       }
     ],
@@ -139,9 +140,9 @@ const config: HardhatUserConfig = {
   //   }),
   // },
   paths: {
-    sources: "./contracts", // For IDO
+    sources: "./src", // For IDO
     artifacts: "./artifacts",
-    tests: "./tests",
+    tests: "./test",
     cache: "./cache_hardhat",
   },
 };
