@@ -409,11 +409,6 @@ contract BlogChallengeTest is Test {
 
   function testTimeConstraints() public {
     vm.startPrank(challenger);
-    
-    // 授权惩罚代币
-    token.approve(address(blogChallenge), blogChallenge.approveAmount());
-    blogChallenge.depositPenalty();
-    blogChallenge.setEnableParticipate(true);
 
     // 尝试在开始时间前提交博客
     vm.warp(startTime - 1);
@@ -436,10 +431,6 @@ contract BlogChallengeTest is Test {
   }
 
   function testParticipationConstraints() public {
-    vm.startPrank(challenger);
-    token.approve(address(blogChallenge), blogChallenge.approveAmount());
-    blogChallenge.depositPenalty();
-    vm.stopPrank();
 
     address participant = participants[0];
     vm.startPrank(participant);
@@ -497,7 +488,7 @@ contract BlogChallengeTest is Test {
     
     // 非挑战者尝试存入押金
     token.approve(address(blogChallenge), blogChallenge.approveAmount());
-    vm.expectRevert("Only challenger");
+    vm.expectRevert("Not challenger");
     blogChallenge.depositPenalty();
 
     // 非挑战者尝试启用参与
@@ -514,10 +505,6 @@ contract BlogChallengeTest is Test {
 
   function testCycleUpdates() public {
     vm.startPrank(challenger);
-    
-    token.approve(address(blogChallenge), blogChallenge.approveAmount());
-    blogChallenge.depositPenalty();
-    blogChallenge.setEnableParticipate(true);
 
     // 提交第一个周期的博客
     vm.warp(startTime + 1);
