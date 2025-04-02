@@ -10,5 +10,34 @@ out/
 # Docs
 docs/
 
+.git-old
+
 # Dotenv file
 .env
+
+node_modules
+*.env
+coverage
+coverage.json
+typechain
+typechain-types
+
+contracts.json
+contracts.*.json
+
+# Hardhat files
+cache
+artifacts
+cache_hardhat
+cache_hardhat-zk
+artifacts-zk
+
+yarn.lock
+yarn-error.log
+
+wallets
+*.zip
+
+backend
+backend-new
+temp
