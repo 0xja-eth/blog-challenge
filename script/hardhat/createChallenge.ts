@@ -29,7 +29,8 @@ export async function createChallenge(hre: HardhatRuntimeEnvironment) {
     token.address,
     penaltyAmount,
     maxParticipants,
-    freeMode
+    freeMode,
+    true // participatable
   ), 'Create challenge');
 
   // 等待交易确认

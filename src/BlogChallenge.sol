@@ -180,8 +180,11 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
 
   // region View calls
 
-  function getInfo() public view returns (uint256, address, uint256, uint256, uint256, address, uint256, uint256, uint256, uint256) {
-    return (id, challenger, startTime, cycle, numberOfCycles, address(penaltyToken), penaltyAmount, maxParticipants, participants.length, blogSubmissions.length);
+  function getInfo() public view returns (uint256, address, uint256, uint256, uint256, address, uint256, uint256, bool) {
+    return (id, challenger, startTime, cycle, numberOfCycles, address(penaltyToken), penaltyAmount, maxParticipants, freeMode);
+  }
+  function getState() public view returns (uint256, bool, bool, uint256, uint256, uint256, bool) {
+    return (currentCycle(), started, participatable, participants.length, blogSubmissions.length, deposit, isChallengerApproved());
   }
 
   // 当前周期数（0表示没有开始，从1开始，最大值为numberOfCycles + 1）
@@ -321,6 +324,8 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
   }
 
   function _participateWithAmount(uint256 tokenAmount) internal {
+    if (freeMode) require(balanceOf(msg.sender) == 0, "Already participated");
+
     if (freeMode || tokenAmount < MIN_PARTICIPATE_TOKEN_AMOUNT) tokenAmount = MIN_PARTICIPATE_TOKEN_AMOUNT;
 
     require(tokenAmount <= balanceOf(address(this)), "Not enough tokens");
@@ -378,6 +383,8 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
   ) internal override {
     super._update(from, to, amount);
 
+    require(to != challenger, "Cannot send token to blog challenger");
+
     // Skip checks for minting and burning
     if (from == address(0) || to == address(0)) return;
 
@@ -412,10 +419,9 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
 
   // 赠送代币（只有挑战者可以调用）
   function transferTokens(address to, uint256 amount) external onlyChallenger {
-    require(amount > 0, "Amount must be greater than 0");
-    require(balanceOf(address(this)) >= amount, "Not enough available tokens");
-
-    require(transfer(to, amount), "Transfer failed");
+    // require(amount > 0, "Amount must be greater than 0");
+    // require(balanceOf(address(this)) >= amount, "Not enough available tokens");
+    _transfer(address(this), to, amount);
   }
 
   // 设置是否可以参与
