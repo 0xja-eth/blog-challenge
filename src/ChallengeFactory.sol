@@ -36,7 +36,8 @@ contract ChallengeFactory is Ownable {
         uint256 numberOfCycles,
         address penaltyToken,
         uint256 penaltyAmount,
-        uint256 maxParticipants
+        uint256 maxParticipants,
+        bool freeMode
     ) external returns (address) {
         // 使用 abi.encodeWithSelector 来编码构造函数调用
         bytes memory constructorArgs = abi.encode(
@@ -47,7 +48,8 @@ contract ChallengeFactory is Ownable {
             numberOfCycles,
             penaltyToken,
             penaltyAmount,
-            maxParticipants
+            maxParticipants,
+            freeMode
         );
 
         // 计算salt（使用构造函数参数的hash作为salt）
@@ -85,7 +87,8 @@ contract ChallengeFactory is Ownable {
         uint256 numberOfCycles,
         address penaltyToken,
         uint256 penaltyAmount,
-        uint256 maxParticipants
+        uint256 maxParticipants,
+        bool freeMode
     ) public view returns (address) {
         bytes memory constructorArgs = abi.encode(
             challenges.length,
@@ -95,7 +98,8 @@ contract ChallengeFactory is Ownable {
             numberOfCycles,
             penaltyToken,
             penaltyAmount,
-            maxParticipants
+            maxParticipants,
+            freeMode
         );
         bytes32 salt = keccak256(constructorArgs);
         

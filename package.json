@@ -10,6 +10,7 @@
     "test": "npm run test/hardhat & npm run test/foundry",
     "hardhat-node": "npx hardhat node",
     "deploy": "npx hardhat run script/hardhat/deploy.ts --no-compile",
+    "deploy:token": "npx hardhat run script/hardhat/deployToken.ts --no-compile",
     "create": "npx hardhat run script/hardhat/createChallenge.ts --no-compile",
     "participate": "npx hardhat run script/hardhat/participate.ts --no-compile",
     "submit": "npx hardhat run script/hardhat/submitBlog.ts --no-compile",

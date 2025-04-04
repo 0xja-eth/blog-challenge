@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import dotenv from "dotenv"
-import {mainWallet, makeContract, sendTx, setupHRE} from "../../utils/contract";
+import {getContract, mainWallet, makeContract, sendTx, setupHRE} from "../../utils/contract";
 import hre from "hardhat";
 import {utils} from "ethers";
 
@@ -11,7 +11,7 @@ export async function createChallenge(hre: HardhatRuntimeEnvironment) {
 
   // 获取工厂合约
   const [factory] = await makeContract("ChallengeFactory");
-  const [token] = await makeContract("BaseERC20");
+  const [token] = await makeContract("TestToken");
 
   // 设置挑战参数
   const startTime = Math.floor(Date.now() / 1000) + 3600; // 1小时后开始
@@ -28,7 +28,7 @@ export async function createChallenge(hre: HardhatRuntimeEnvironment) {
     token.address,
     penaltyAmount,
     maxParticipants
-  ));
+  ), 'Create challenge');
 
   // 等待交易确认
   const receipt = await tx.wait();
@@ -41,6 +41,13 @@ export async function createChallenge(hre: HardhatRuntimeEnvironment) {
   if (challengeCreatedEvent) {
     const challengeAddress = challengeCreatedEvent.args.challenge;
     console.log("New challenge created at:", challengeAddress);
+
+    const challenge = await getContract("BlogChallenge", "BlogChallenge", challengeAddress);
+    const allowance = await challenge.approveAmount();
+
+    await sendTx(token.approve(challenge.address, allowance), 'Approve token');
+    await sendTx(challenge.depositPenalty(), 'Deposit penalty');
+
     return challengeAddress;
   }
 }

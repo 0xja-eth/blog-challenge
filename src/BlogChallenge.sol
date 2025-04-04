@@ -31,16 +31,19 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
   uint256 public penaltyAmount; // 惩罚金额
 
   uint256 public maxParticipants; // 最大参与人数
+  bool public freeMode; // 免费模式
 
   uint256 public deposit; // 押金（已存入的押金）
 
   struct BlogSubmission {
+    uint256 cycle;
     string title;
     string description;
     string url;
+    uint256 timestamp;
   }
 
-  BlogSubmission[][] public blogSubmissions; // 博客提交情况
+  BlogSubmission[] public blogSubmissions; // 博客提交情况
   uint8 public noBalanceCount; // 余额不足次数
 
   uint256 public lastUpdatedCycle; // 最后更新的Cycle
@@ -146,13 +149,13 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     uint256 _numberOfCycles,
     address _penaltyToken,
     uint256 _penaltyAmount,
-    uint256 _maxParticipants
+    uint256 _maxParticipants,
+    bool _freeMode
   ) ERC20(
     string.concat("Blog Challenge Token #", Strings.toString(_id)),
     string.concat("BLOG#", Strings.toString(_id))
   ) {
     factory = msg.sender;
-//    require(msg.sender == factory, 'Forbidden');
 
     id = _id;
     challenger = _challenger;
@@ -162,13 +165,8 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     penaltyToken = IERC20(_penaltyToken);
     penaltyAmount = _penaltyAmount;
     maxParticipants = _maxParticipants;
+    freeMode = _freeMode;
 
-//    name = string.concat("Blog Challenge Token #", Strings.toString(_id));
-//    symbol = string.concat("BLOG#", Strings.toString(_id));
-
-    blogSubmissions = new BlogSubmission[][](_numberOfCycles);
-    for (uint256 i = 0; i < _numberOfCycles; i++)
-      blogSubmissions[i] = new BlogSubmission[](0);
     started = true;
 
     // 铸造挑战代币
@@ -178,6 +176,10 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
   }
 
   // region View calls
+
+  function getInfo() public view returns (uint256, address, uint256, uint256, uint256, address, uint256, uint256, uint256, uint256) {
+    return (id, challenger, startTime, cycle, numberOfCycles, address(penaltyToken), penaltyAmount, maxParticipants, participants.length, blogSubmissions.length);
+  }
 
   // 当前周期数（0表示没有开始，从1开始，最大值为numberOfCycles + 1）
   function currentCycle() public view returns (uint256) {
@@ -210,7 +212,10 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
 
   // 周期是否成功（周期都是从1开始的）
   function isCycleSucceed(uint256 _cycle) public view returns (bool) {
-    return blogSubmissions[_cycle - 1].length > 0;
+    for (uint256 i = 0; i < blogSubmissions.length; i++) {
+      if (blogSubmissions[i].cycle == _cycle) return true;
+    }
+    return false;
   }
 
   // 检查挑战是否成功
@@ -249,6 +254,8 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
 
   // 获取当前能购买的最大持股比例
   function maxShareBps(address user) public view returns (uint256) {
+    if (freeMode) return 10000 / (participants.length + 1);
+
     uint256 restTokens = balanceOf(address(this));
     uint256 userBalance = balanceOf(user);
 
@@ -258,6 +265,8 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
   }
 
   function minShareBps2Amount(uint256 minShareBps) public view returns (uint256) {
+    if (freeMode) return MIN_PARTICIPATE_TOKEN_AMOUNT;
+
     uint256 restTokens = balanceOf(address(this));
     uint256 soldTokens = totalSupply() - restTokens;
     uint256 userBalance = balanceOf(msg.sender);
@@ -277,6 +286,8 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
   }
 
   function participateWithAmountCost(uint256 tokenAmount) public view returns (uint256) {
+    if (freeMode) return 0;
+
     if (tokenAmount < MIN_PARTICIPATE_TOKEN_AMOUNT) tokenAmount = MIN_PARTICIPATE_TOKEN_AMOUNT;
 
     return (tokenAmount * penaltyAmount * 100) / (TOKEN_PRICE_MULTIPLIER * INITIAL_SUPPLY);
@@ -294,27 +305,6 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     checkParticipantLimit 
   {
     _participateWithAmount(minShareBps2Amount(minShareBps));
-
-    // require(tokenAmount <= restTokens, "Not enough share");
-
-    // uint256 cost = (tokenAmount * penaltyAmount * 100) / (TOKEN_PRICE_MULTIPLIER * INITIAL_SUPPLY);
-    // require(cost > 0, "Cost too small");
-
-    // // 转移惩罚代币
-    // require(
-    //   penaltyToken.transferFrom(msg.sender, address(this), cost),
-    //   "Transfer failed"
-    // );
-
-    // // 转移挑战代币
-    // require(
-    //   transfer(msg.sender, tokenAmount),
-    //   "Token transfer failed"
-    // );
-
-    // if (userBalance <= 0) participants.push(msg.sender);
-
-    // emit Participate(challenger, msg.sender, tokenAmount);
   }
 
   // 中途加入（指定代币数量）
@@ -328,18 +318,18 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
   }
 
   function _participateWithAmount(uint256 tokenAmount) internal {
-    if (tokenAmount < MIN_PARTICIPATE_TOKEN_AMOUNT) tokenAmount = MIN_PARTICIPATE_TOKEN_AMOUNT;
+    if (freeMode || tokenAmount < MIN_PARTICIPATE_TOKEN_AMOUNT) tokenAmount = MIN_PARTICIPATE_TOKEN_AMOUNT;
 
     require(tokenAmount <= balanceOf(address(this)), "Not enough tokens");
 
     uint256 cost = participateWithAmountCost(tokenAmount); // (tokenAmount * penaltyAmount * 100) / (TOKEN_PRICE_MULTIPLIER * INITIAL_SUPPLY);
-    require(cost > 0, "Cost too small");
 
     // 转移惩罚代币
-    require(
-      penaltyToken.transferFrom(msg.sender, address(this), cost),
-      "Transfer failed"
-    );
+    if (cost > 0) 
+      require(
+        penaltyToken.transferFrom(msg.sender, address(this), cost),
+        "Transfer failed"
+      );
 
     // 转移挑战代币
     _transfer(address(this), msg.sender, tokenAmount);
@@ -355,14 +345,14 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     require(isToBeUpdatedCycle(_cycle), "All cycles are updated!");
 
     do {
-      BlogSubmission[] memory blogs = blogSubmissions[_cycle - 1];
+      bool isSucceed = isCycleSucceed(_cycle);
 
       // 如果挑战者没有提交博客，则发放惩罚金
-      if (blogs.length <= 0) onCycleFailed();
+      if (!isSucceed) onCycleFailed();
       // 否则视为通过
       else onCyclePass();
 
-      emit CycleEnd(challenger, _cycle, blogs.length > 0);
+      emit CycleEnd(challenger, _cycle, isSucceed);
 
       _cycle++;
     } while (started && isToBeUpdatedCycle(_cycle));
@@ -425,6 +415,10 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     require(transfer(to, amount), "Transfer failed");
   }
 
+  // 设置是否免费参与
+  function setFreeParticipate(bool _freeParticipate) public onlyChallenger {
+    freeMode = _freeParticipate;
+  } 
   // 设置是否可以参与
   function setEnableParticipate(bool _enableParticipate) public onlyChallenger {
     enableParticipate = _enableParticipate;
@@ -447,11 +441,13 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     string memory url
   ) public onlyChallenger onlyStarted {
     // 记录博客提交情况
-    blogSubmissions[currentCycleIdx()].push(
+    blogSubmissions.push(
       BlogSubmission({
+        cycle: currentCycle(),
         title: title,
         description: description,
-        url: url
+        url: url,
+        timestamp: block.timestamp
       })
     );
     emit SubmitBlog(challenger, currentCycle(), title, description, url);
