@@ -49,7 +49,7 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
   uint256 public lastUpdatedCycle; // 最后更新的Cycle
 
   bool public started; // 挑战是否开始
-  bool public enableParticipate; // 是否可以参与
+  bool public participatable; // 是否可以参与
 
   // region events
 
@@ -130,9 +130,10 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     _;
   }
   modifier checkParticipantLimit() {
-    if (maxParticipants > 0) {
-      require(participants.length < maxParticipants, "Participants over limit");
-    }
+    require(participatable, "Not participatable");
+
+    if (maxParticipants > 0) require(participants.length < maxParticipants, "Participants over limit");
+
     _;
   }
 
@@ -150,7 +151,8 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     address _penaltyToken,
     uint256 _penaltyAmount,
     uint256 _maxParticipants,
-    bool _freeMode
+    bool _freeMode,
+    bool _participatable
   ) ERC20(
     string.concat("Blog Challenge Token #", Strings.toString(_id)),
     string.concat("BLOG#", Strings.toString(_id))
@@ -166,6 +168,7 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     penaltyAmount = _penaltyAmount;
     maxParticipants = _maxParticipants;
     freeMode = _freeMode;
+    participatable = _participatable;
 
     started = true;
 
@@ -415,13 +418,9 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
     require(transfer(to, amount), "Transfer failed");
   }
 
-  // 设置是否免费参与
-  function setFreeParticipate(bool _freeParticipate) public onlyChallenger {
-    freeMode = _freeParticipate;
-  } 
   // 设置是否可以参与
-  function setEnableParticipate(bool _enableParticipate) public onlyChallenger {
-    enableParticipate = _enableParticipate;
+  function setParticipatable(bool _participatable) public onlyChallenger {
+    participatable = _participatable;
   } 
 
   // 存入押金

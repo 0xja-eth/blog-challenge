@@ -19,6 +19,7 @@ export async function createChallenge(hre: HardhatRuntimeEnvironment) {
   const cycleCnt = 12; // 12个周期
   const penaltyAmount = utils.parseEther("30"); // 30个代币
   const maxParticipants = 3; // 最多3个参与者
+  const freeMode = true; // 免费模式
 
   // 创建挑战
   const tx = await sendTx(factory.createChallenge(
@@ -27,7 +28,8 @@ export async function createChallenge(hre: HardhatRuntimeEnvironment) {
     cycleCnt,
     token.address,
     penaltyAmount,
-    maxParticipants
+    maxParticipants,
+    freeMode
   ), 'Create challenge');
 
   // 等待交易确认
