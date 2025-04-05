@@ -30,6 +30,8 @@ contract BlogChallengeTest is Test {
   uint256 penaltyAmount = 30 ether;
   uint256 initFund = 1000000 ether;
   uint256 maxParticipants = 3;
+  bool freeMode = false;
+  bool participatable = true;
 
   address[] whitelist;
   address[] participants;
@@ -76,10 +78,12 @@ contract BlogChallengeTest is Test {
       cycleCnt,
       address(token),
       penaltyAmount,
-      maxParticipants
+      maxParticipants,
+      freeMode,
+      participatable
     );
     blogChallenge = BlogChallenge(challengeAddr);
-    blogChallenge.setEnableParticipate(true);
+    blogChallenge.setParticipatable(true);
 
     token.approve(address(blogChallenge), blogChallenge.approveAmount());
     blogChallenge.depositPenalty();
@@ -152,7 +156,9 @@ contract BlogChallengeTest is Test {
       cycleCnt,
       address(token),
       penaltyAmount,
-      0 // no limit
+      0, // no limit
+      freeMode,
+      participatable
     );
     BlogChallenge challenge2 = BlogChallenge(challenge2Addr);
     
@@ -361,7 +367,7 @@ contract BlogChallengeTest is Test {
 
     // 非挑战者尝试启用参与
     vm.expectRevert("Not challenger!");
-    blogChallenge.setEnableParticipate(true);
+    blogChallenge.setParticipatable(true);
 
     // 非挑战者尝试提交博客
     vm.warp(startTime + 1);
