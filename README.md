@@ -1,22 +1,10 @@
 # Blog Challenge Smart Contract
 
-A decentralized blog challenge platform built on blockchain technology that incentivizes consistent blogging through smart contracts.
+A decentralized blog challenge platform built on blockchain technology that incentivizes consistent blogging through smart contracts using a penalty mechanism.
 
 [中文文档](./README.zh-CN.md) | [Product Documentation](https://exermon-blog.notion.site/BlogChallenge-Product-Description-1d348ee5ba8d80d8a18edc78200bfe11)
 
-## Overview
-
-The Blog Challenge smart contract allows users to participate in blogging challenges with financial incentives. Participants can stake tokens and earn rewards for consistent blogging, while facing penalties for missing deadlines.
-
 For detailed product specifications and user flows, please refer to our [Product Documentation](https://exermon-blog.notion.site/BlogChallenge-Product-Description-1d348ee5ba8d80d8a18edc78200bfe11).
-
-### Key Features
-
-- **Challenge Management**: Create and manage blogging challenges with customizable parameters
-- **Token System**: Built-in ERC20 token system for managing stakes and rewards
-- **Cycle-based Structure**: Organized around blogging cycles with clear deadlines
-- **Penalty Mechanism**: Automated penalty system for missed blog posts
-- **Participant Management**: Support for multiple participants with whitelist functionality
 
 ## Technical Stack
 
@@ -28,17 +16,49 @@ For detailed product specifications and user flows, please refer to our [Product
 
 ## Smart Contract Architecture
 
-The `BlogChallenge` contract inherits from:
-- `ERC20`: For token functionality
-- `ReentrancyGuard`: For security against reentrancy attacks
+The project implements a factory pattern with two main contracts:
 
-### Key Components
+### ChallengeFactory Contract
 
-- Challenge Parameters (cycles, timeframes, penalties)
-- Participant Management
-- Blog Submission Tracking
-- Token Economics
-- Security Features
+The factory contract is responsible for:
+- Creating and managing BlogChallenge instances
+- Tracking all created challenges
+- Maintaining challenger-to-challenge mappings
+- Implementing upgradeable challenge implementation using CREATE2
+
+Key features:
+- Uses CREATE2 for deterministic address generation
+- Supports challenge implementation upgrades
+- Maintains a registry of all challenges
+- Owned by a contract administrator
+
+### BlogChallenge Contract
+
+Each challenge instance is an ERC20 token contract with the following features:
+
+1. **State Management**:
+   - Not Started → Started → Ended
+   - Transitions triggered by time and user actions
+   - Automatic cycle updates and penalty distribution
+
+2. **Core Components**:
+   - Challenge Parameters (cycles, timeframes, penalties)
+   - Participant Management with whitelist support
+   - Blog Submission Tracking with cycle-based structure
+   - Token Economics for stake management
+   - Automated Penalty Distribution System
+
+3. **Security Features**:
+   - ReentrancyGuard for transaction safety
+   - Role-based access control
+   - Safe token handling with approve-transfer pattern
+   - Automated state transitions
+
+4. **Token Economics**:
+   - Initial supply: 1M tokens
+   - Deposit multiplier: 3x penalty amount
+   - Minimum participation requirements
+   - Automatic penalty distribution based on stake
 
 ## Development Setup
 
@@ -68,46 +88,3 @@ pnpm test
 - `participate`: Join an existing challenge
 - `submit`: Submit a blog post
 - `status`: Check challenge status
-
-## Contract Usage
-
-### Creating a Challenge
-
-A challenge can be created with the following parameters:
-- Start time
-- Cycle duration
-- Number of cycles
-- Penalty token and amount
-- Maximum participants
-- Free mode option
-
-### Participating
-
-Participants can join challenges by:
-1. Getting whitelisted (if required)
-2. Staking required tokens
-3. Meeting minimum participation requirements
-
-### Submitting Blogs
-
-Challengers must:
-1. Submit blogs within their cycle timeframe
-2. Include title, description, and URL
-3. Maintain consistent posting to avoid penalties
-
-### Rewards and Penalties
-
-- Successful completion rewards participants
-- Missed posts trigger penalties
-- Automatic distribution of rewards/penalties
-
-## Security Features
-
-- ReentrancyGuard implementation
-- Role-based access control
-- Safe token handling
-- Automated penalty management
-
-## License
-
-ISC License
