@@ -24,7 +24,8 @@ export async function submitBlog(
   // 检查是否是挑战者
   const challenger = await challenge.challenger();
   const wallet = await mainWallet();
-  if (challenger.toString().toLowerCase() !== wallet.toString().toLowerCase()) {
+  
+  if (challenger.toString().toLowerCase() !== wallet.address.toString().toLowerCase()) {
     throw new Error("Only challenger can submit blogs");
   }
 

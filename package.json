@@ -14,7 +14,8 @@
     "create": "npx hardhat run script/hardhat/createChallenge.ts --no-compile",
     "participate": "npx hardhat run script/hardhat/participate.ts --no-compile",
     "submit": "npx hardhat run script/hardhat/submitBlog.ts --no-compile",
-    "status": "npx hardhat run script/hardhat/checkStatus.ts --no-compile"
+    "status": "npx hardhat run script/hardhat/checkStatus.ts --no-compile",
+    "transfer": "npx hardhat run script/hardhat/transferToken.ts --no-compile"
   },
   "keywords": [],
   "author": "",
