@@ -67,12 +67,42 @@ Each challenge instance is an ERC20 token contract with the following features:
 pnpm install
 ```
 
-2. Compile contracts:
+2. Set up environment variables:
+
+First, set up the root environment file:
+```bash
+cp .env.example .env
+```
+
+Configure the following in your `.env` file:
+- `CHAIN`: Target blockchain network (e.g., optimism, arbitrum)
+- `DEFAULT_ENV`: Network environment (Options: `dev`, `test`, `main`)
+- `PRIVATE_KEY`: Default private key for deployment
+- `DEVNET_PRIVATE_KEY`: Private key for development network
+- `TESTNET_PRIVATE_KEY`: Private key for test network
+- `MAINNET_PRIVATE_KEY`: Private key for main network
+- `CONTRACT_CACHE_FILE`: Path to contract cache file
+
+Then, set up the chain-specific environment file based on your chosen `CHAIN`:
+```bash
+# If CHAIN=optimism in .env
+cp env/optimism.env.example env/optimism.env
+# If CHAIN=arbitrum in .env
+cp env/arbitrum.env.example env/arbitrum.env
+```
+
+Configure the chain-specific environment file with:
+- Chain IDs for different networks
+- RPC URLs for each network
+- Network-specific private keys
+- Block explorer verification URLs
+
+3. Compile contracts:
 ```bash
 pnpm compile
 ```
 
-3. Run tests:
+4. Run tests:
 ```bash
 pnpm test
 ```

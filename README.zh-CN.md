@@ -67,12 +67,41 @@
 pnpm install
 ```
 
-2. 编译合约：
+2. 设置环境变量：
+
+首先，设置根环境文件：
+```bash
+cp .env.example .env
+```
+
+在 `.env` 文件中配置以下内容：
+- `CHAIN`：目标区块链网络（如 optimism、arbitrum）
+- `DEFAULT_ENV`：网络环境（可选值为 `dev`, `test`, `main`）
+- `PRIVATE_KEY`：默认部署私钥
+- `DEVNET_PRIVATE_KEY`：开发网络私钥
+- `TESTNET_PRIVATE_KEY`：测试网络私钥
+- `MAINNET_PRIVATE_KEY`：主网私钥
+- `CONTRACT_CACHE_FILE`：合约缓存文件路径
+
+然后，根据您在 `.env` 中选择的 `CHAIN` 设置对应的链特定环境文件：
+```bash
+# 如果 .env 中设置了 CHAIN=optimism
+cp env/optimism.env.example env/optimism.env
+# 如果 .env 中设置了 CHAIN=arbitrum
+cp env/arbitrum.env.example env/arbitrum.env
+```
+
+在链特定环境文件中配置以下内容：
+- 各网络的链 ID
+- 各网络的 RPC URL
+- 网络特定的私钥
+- 区块浏览器验证 URL
+3. 编译合约：
 ```bash
 pnpm compile
 ```
 
-3. 运行测试：
+4. 运行测试：
 ```bash
 pnpm test
 ```
