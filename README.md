@@ -1,105 +1,113 @@
-# Blog Challenge Contract
+# Blog Challenge Smart Contract
 
-这是一个基于智能合约的博客写作挑战系统。用户可以创建挑战，设定挑战周期和奖励，其他用户可以参与挑战并获得奖励。
+A decentralized blog challenge platform built on blockchain technology that incentivizes consistent blogging through smart contracts.
 
-## 安装
+[中文文档](./README.zh-CN.md) | [Product Documentation](https://exermon-blog.notion.site/BlogChallenge-Product-Description-1d348ee5ba8d80d8a18edc78200bfe11)
 
+## Overview
+
+The Blog Challenge smart contract allows users to participate in blogging challenges with financial incentives. Participants can stake tokens and earn rewards for consistent blogging, while facing penalties for missing deadlines.
+
+For detailed product specifications and user flows, please refer to our [Product Documentation](https://exermon-blog.notion.site/BlogChallenge-Product-Description-1d348ee5ba8d80d8a18edc78200bfe11).
+
+### Key Features
+
+- **Challenge Management**: Create and manage blogging challenges with customizable parameters
+- **Token System**: Built-in ERC20 token system for managing stakes and rewards
+- **Cycle-based Structure**: Organized around blogging cycles with clear deadlines
+- **Penalty Mechanism**: Automated penalty system for missed blog posts
+- **Participant Management**: Support for multiple participants with whitelist functionality
+
+## Technical Stack
+
+- Solidity ^0.8.4
+- OpenZeppelin Contracts
+- Hardhat & Foundry Development Environment
+- TypeScript
+- zkSync Integration
+
+## Smart Contract Architecture
+
+The `BlogChallenge` contract inherits from:
+- `ERC20`: For token functionality
+- `ReentrancyGuard`: For security against reentrancy attacks
+
+### Key Components
+
+- Challenge Parameters (cycles, timeframes, penalties)
+- Participant Management
+- Blog Submission Tracking
+- Token Economics
+- Security Features
+
+## Development Setup
+
+1. Install dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
-## 编译合约
-
+2. Compile contracts:
 ```bash
-npm run compile
+pnpm compile
 ```
 
-## 测试
-
+3. Run tests:
 ```bash
-# 运行所有测试
-npm test
-
-# 只运行 Hardhat 测试
-npm run test/hardhat
-
-# 只运行 Foundry 测试
-npm run test/foundry
+pnpm test
 ```
 
-## 部署合约
+## Available Scripts
 
-```bash
-# 部署合约
-npm run deploy
+- `compile`: Compile smart contracts
+- `test/hardhat`: Run Hardhat tests
+- `test/foundry`: Run Foundry tests
+- `deploy`: Deploy the main contract
+- `deploy:token`: Deploy the token contract
+- `create`: Create a new challenge
+- `participate`: Join an existing challenge
+- `submit`: Submit a blog post
+- `status`: Check challenge status
 
-# 创建新的挑战
-npm run create
+## Contract Usage
 
-# 参与挑战
-npm run participate <挑战地址> [份额(基点)]
+### Creating a Challenge
 
-# 提交博客
-npm run submit <挑战地址> <标题> <描述> <URL>
+A challenge can be created with the following parameters:
+- Start time
+- Cycle duration
+- Number of cycles
+- Penalty token and amount
+- Maximum participants
+- Free mode option
 
-# 查看挑战状态
-npm run status <挑战地址>
-```
+### Participating
 
-## 合约说明
+Participants can join challenges by:
+1. Getting whitelisted (if required)
+2. Staking required tokens
+3. Meeting minimum participation requirements
 
-### BlogChallenge
+### Submitting Blogs
 
-博客挑战合约，主要功能：
+Challengers must:
+1. Submit blogs within their cycle timeframe
+2. Include title, description, and URL
+3. Maintain consistent posting to avoid penalties
 
-1. 创建挑战：设定挑战周期、奖励代币等参数
-2. 参与挑战：其他用户可以参与挑战并获得奖励代币
-3. 提交博客：挑战者需要在每个周期内提交博客
-4. 检查状态：查看挑战进度、参与者信息等
+### Rewards and Penalties
 
-### ChallengeFactory
+- Successful completion rewards participants
+- Missed posts trigger penalties
+- Automatic distribution of rewards/penalties
 
-挑战工厂合约，用于创建新的挑战。
+## Security Features
 
-## 环境变量
+- ReentrancyGuard implementation
+- Role-based access control
+- Safe token handling
+- Automated penalty management
 
-创建 `.env` 文件并设置以下环境变量：
+## License
 
-```bash
-# 网络设置
-DEFAULT_ENV=test # 或 dev, prod
-
-# 私钥（用于部署和交易）
-PRIVATE_KEY=your_private_key
-
-# RPC URL
-DEV_URL=http://localhost:8545
-TEST_URL=https://your_testnet_rpc
-PROD_URL=https://your_mainnet_rpc
-```
-
-## 脚本使用示例
-
-1. 创建新的挑战：
-
-```bash
-npm run create
-```
-
-2. 参与挑战（50% 份额）：
-
-```bash
-npm run participate 0x123...abc 5000
-```
-
-3. 提交博客：
-
-```bash
-npm run submit 0x123...abc "我的第一篇博客" "这是一篇测试博客" "https://example.com/blog/1"
-```
-
-4. 查看挑战状态：
-
-```bash
-npm run status 0x123...abc
-```
+ISC License

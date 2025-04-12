@@ -183,8 +183,8 @@ contract BlogChallenge is ERC20, ReentrancyGuard {
   function getInfo() public view returns (uint256, address, uint256, uint256, uint256, address, uint256, uint256, bool) {
     return (id, challenger, startTime, cycle, numberOfCycles, address(penaltyToken), penaltyAmount, maxParticipants, freeMode);
   }
-  function getState() public view returns (uint256, bool, bool, uint256, uint256, uint256, bool) {
-    return (currentCycle(), started, participatable, participants.length, blogSubmissions.length, deposit, isChallengerApproved());
+  function getState() public view returns (uint256, uint256, bool, bool, uint256, uint256, uint256, bool) {
+    return (currentCycle(), lastUpdatedCycle, started, participatable, participants.length, blogSubmissions.length, deposit, isChallengerApproved());
   }
 
   // 当前周期数（0表示没有开始，从1开始，最大值为numberOfCycles + 1）
